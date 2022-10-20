@@ -20,6 +20,8 @@ class HomeScreen extends StatelessWidget {
               centerTitle: true,
             ),
             body: StaggeredDualView(
+                aspectRation: 0.65,
+                spacing: 30,
                 itemBuilder: (context, index) {
                   return MealItem(
                     meal: meals[index],
@@ -35,35 +37,56 @@ class MealItem extends StatelessWidget {
   final Meal meal;
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-            child: Image(
-          image: AssetImage(meal.image),
-          fit: BoxFit.cover,
-        )),
-        const Padding(padding: EdgeInsets.only(top: 20.0)),
-        Expanded(
-            child: Column(
-          children: [
-            Text(
-              meal.name,
-              maxLines: 2,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 8,
+      shadowColor: Colors.black54,
+      child: Column(
+        children: [
+          Expanded(
+              child: ClipOval(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Image(
+                image: AssetImage(meal.image),
+                fit: BoxFit.cover,
               ),
             ),
-            Text(
-              meal.weight,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 11,
-                  color: Colors.grey),
-            ),
-          ],
-        ))
-      ],
+          )),
+          const SizedBox(
+            height: 10,
+          ),
+          Expanded(
+              child: Column(
+            children: [
+              Text(
+                meal.name,
+                maxLines: 2,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              Text(
+                meal.weight,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                    color: Colors.grey),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                    5,
+                    (index) => Icon(
+                          index < 4 ? Icons.star : Icons.star_border,
+                          color: Colors.yellow,
+                        )),
+              )
+            ],
+          ))
+        ],
+      ),
     );
   }
 }
@@ -84,12 +107,31 @@ class StaggeredDualView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: aspectRation,
-            crossAxisSpacing: spacing,
-            mainAxisSpacing: spacing),
-        itemBuilder: itemBuilder);
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final itemHeight = (width * 0.5) / aspectRation;
+      final height = constraints.maxHeight + itemHeight;
+
+      return OverflowBox(
+        maxHeight: height,
+        minHeight: height,
+        maxWidth: width,
+        minWidth: width,
+        child: GridView.builder(
+            padding: EdgeInsets.only(top: itemHeight * 0.5, bottom: itemHeight),
+            itemCount: itemCount,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: aspectRation,
+                crossAxisSpacing: spacing,
+                mainAxisSpacing: spacing),
+            itemBuilder: (context, index) {
+              return Transform.translate(
+                offset: Offset(0.0, index.isOdd ? (itemHeight * 0.5) : 0.0),
+                child: itemBuilder(context, index),
+              );
+            }),
+      );
+    });
   }
 }
